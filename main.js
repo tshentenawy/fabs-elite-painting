@@ -88,3 +88,33 @@ window.addEventListener('scroll', () => {
     if (a.getAttribute('href') === '#' + current) a.classList.add('active');
   });
 });
+
+// ===== CONTACT FORM =====
+const contactForm = document.getElementById('contactForm');
+const formStatus = document.getElementById('formStatus');
+
+if (contactForm && formStatus) {
+  contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const service = document.getElementById('service').value;
+    const message = document.getElementById('message').value.trim();
+
+    const subject = encodeURIComponent(`Free Quote Request: ${service} - ${name}`);
+    const body = encodeURIComponent(
+      `Name: ${name}\nPhone: ${phone}\nEmail: ${email}\nService: ${service}\n\nProject Details:\n${message || 'No additional details provided.'}`
+    );
+
+    // Provide user confirmation on page
+    formStatus.className = 'form-status success';
+    formStatus.style.display = 'block';
+    formStatus.innerHTML = `✓ Thank you, <strong>${name}</strong>! Your quote request has been prepared. Opening your email app to send...`;
+
+    // Trigger email client with prefilled details
+    setTimeout(() => {
+      window.location.href = `mailto:info@fabselitepainting.com?subject=${subject}&body=${body}`;
+    }, 600);
+  });
+}
