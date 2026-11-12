@@ -1,0 +1,7 @@
+{
+  "name": "fabs-elite-painting",
+  "private": true,
+  "dependencies": {
+    "nodemailer": "^10.5.0"
+  }
+}

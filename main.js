@@ -94,27 +94,44 @@ const contactForm = document.getElementById('contactForm');
 const formStatus = document.getElementById('formStatus');
 
 if (contactForm && formStatus) {
-  contactForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const service = document.getElementById('service').value;
-    const message = document.getElementById('message').value.trim();
+  const trap = document.createElement('input');
+  trap.type = 'text';
+  trap.name = 'company_website';
+  trap.tabIndex = -1;
+  trap.autocomplete = 'off';
+  trap.setAttribute('aria-hidden', 'true');
+  trap.style.cssText = 'position:absolute;left:-10000px;width:1px;height:1px;opacity:0;';
+  contactForm.appendChild(trap);
 
-    const subject = encodeURIComponent(`Free Quote Request: ${service} - ${name}`);
-    const body = encodeURIComponent(
-      `Name: ${name}\nPhone: ${phone}\nEmail: ${email}\nService: ${service}\n\nProject Details:\n${message || 'No additional details provided.'}`
-    );
-
-    // Provide user confirmation on page
-    formStatus.className = 'form-status success';
+  const submitBtn = contactForm.querySelector('button[type="submit"]');
+  const btnHTML = submitBtn ? submitBtn.innerHTML : '';
+  const showStatus = (type, text) => {
+    formStatus.className = `form-status ${type}`;
     formStatus.style.display = 'block';
-    formStatus.innerHTML = `✓ Thank you, <strong>${name}</strong>! Your quote request has been prepared. Opening your email app to send...`;
+    formStatus.textContent = text;
+  };
 
-    // Trigger email client with prefilled details
-    setTimeout(() => {
-      window.location.href = `mailto:info@fabselitepainting.com?subject=${subject}&body=${body}`;
-    }, 600);
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!contactForm.checkValidity()) { contactForm.reportValidity(); return; }
+    const data = Object.fromEntries(new FormData(contactForm).entries());
+    const name = (data.name || '').trim();
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
+    formStatus.style.display = 'none';
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) throw new Error(json.error || 'Something went wrong.');
+      contactForm.reset();
+      showStatus('success', `✓ Thank you, ${name}! Your quote request has been sent. We'll get back to you shortly.`);
+    } catch (err) {
+      showStatus('error', `${err.message} You can also call us at (343) 984-8363 or email info@fabsconstruction.ca.`);
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = btnHTML; }
+    }
   });
 }
